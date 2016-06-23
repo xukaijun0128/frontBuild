@@ -1,0 +1,212 @@
+#!/usr/bin/env node
+var tasks, Build,
+    fs = require('fs'),
+    os = require('os'),
+    _ = require('underscore'),
+    program = require('commander'),
+    grunt = require('../node_modules/grunt/lib/grunt'),
+    Config = require('./config'),
+    getInfo = require('./getInfo'),
+    configPath = process.cwd() + '/.rbuildrc',
+    packageConfig = JSON.parse(
+        fs.readFileSync(__dirname + '/../package.json').toString()
+    );
+program.version(packageConfig.version)
+    .option('-b, --build', '')
+    .option('-e, --excute', 'excute xx file')
+    .option('-w, --watch', 'watch the changes')
+    .parse(process.argv);
+
+if (!fs.existsSync(configPath)) {
+    console.log('error: file %s not found', configPath);
+    process.exit(1);
+}
+
+var Build = function(config) {
+    this.config = config.config;
+    this.build = config.build;
+    this.watch = config.watch;
+    this.basePath = fs.realpathSync(config + '/../') + '/';
+}
+
+Build.prototype._getFilesWithAbsolutePath = function(files) {
+    var basePath = this.basePath;
+
+    return _.map(files, function(fileName) {
+        return basePath + fileName;
+    });
+};
+//获取grunt所需配置
+Build.prototype.run = function() {
+    var _this = this,
+        config = _this.config,
+        infoInstance = new getInfo(config),
+        resources = infoInstance.parseResources(),
+        tasks = {
+            copy: {
+                main: {
+                    files: []
+                },
+                watchTask: {
+                    files: []
+                }
+            },
+            concat: {
+                task: {
+                    files: {}
+                },
+                watchTask: {
+                    files: {}
+                },
+            },
+            uglify: {
+                task: {
+                    files: {}
+                },
+                watchTask: {
+                    files: {}
+                },
+            },
+            sass: {
+                dist: {
+                    options: {
+                        style: 'compressed' //压缩
+                    },
+                    files: []
+                }
+            },
+            chmod: {
+                options: {
+                  mode: '666'
+                },
+                target: {
+                  src: []
+                }
+            },
+            watch: {
+                js: {
+                    files: [],
+                    tasks: [],
+                    options: {
+                        spawn: false,
+                        debounceDelay: 5000,
+                  },
+                },
+                scss: {
+                    files: [],
+                    tasks: [],
+                    options: {
+                        spawn: false,
+                        debounceDelay: 5000,
+                    }
+                }
+            },
+            clean: {
+                files: [],
+                options: {
+                    force: true
+                }
+            },
+            resources: {
+
+            }
+        },
+        removeFiles = [],
+        tempResourceMap = {},
+        resourceFiles = [],
+        configInstance,
+        basePath,
+        buildDirectory,
+        rbuildLock;
+
+        if (resources !== null) {
+            basePath = _this.basePath;
+            configInstance = new Config(config);
+            configInstance.read();
+            buildDirectory = configInstance.get('path', 'build');
+            buildDirectory.javascript = basePath + buildDirectory.javascript + '/';
+            buildDirectory.css = basePath + buildDirectory.css + '/';
+            if (fs.existsSync(basePath + 'rbuild.lock')) {
+                rbuildLock = fs.readFileSync(basePath + 'rbuild.lock').toString();
+                if (rbuildLock) {
+                    rbuildLock = JSON.parse(rbuildLock);
+                }
+
+                _.each(rbuildLock, function(lock) {
+                    var javascript = lock.javascript;
+
+                    if (typeof javascript !== 'undefined') {
+                        removeFiles.push(basePath + javascript);
+                    }
+                });
+            }
+            _.each(resources, function(resource) {
+                var dest = resource.dest,
+                    javascript;
+
+                if (typeof dest.javascript !== 'undefined' && dest.javascript !== null) {
+                    javascript = basePath + dest.javascript;
+                }
+                _.each(_this._getFilesWithAbsolutePath(resource.javascript), function(jsFile) {
+                    resourceFiles.push(jsFile);
+                });
+            });
+
+            if (_.size(removeFiles) > 0) {
+                _.each(removeFiles, function(removeFile) {
+                    if (fs.existsSync(removeFile)) {
+                        fs.unlinkSync(removeFile);
+                    }
+                });
+            }
+            resourceFiles = _.uniq(resourceFiles);
+            _.each(resourceFiles, function(jsFile) {
+                tempResourceMap[jsFile] = buildDirectory.javascript + 'dest/' + jsFile.replace(basePath, '');
+                tasks.copy.main.files.push({
+                    expand: true,
+                    src: [jsFile],
+                    dest: buildDirectory.javascript + 'dest/',
+                    filter: 'isFile'
+                });
+
+                tasks.uglify.task.files[buildDirectory.javascript + 'dest/' + jsFile.replace(basePath, '')] = [jsFile];
+            });
+            _.each(resources, function(resource) {
+                var dest = resource.dest, javascript;
+
+                if (typeof dest.javascript !== 'undefined' && dest.javascript !== null) {
+                    javascript = basePath + dest.javascript;
+                    tasks.concat.task.files[javascript] = _.map(
+                        _this._getFilesWithAbsolutePath(resource.javascript),
+                        function(js) {
+                            return tempResourceMap[js];
+                        }
+                    );
+                }
+            });
+            tasks.clean.files = [buildDirectory.javascript + 'dest'];
+            //保存rbuild.lock
+            infoInstance.save();
+            tasks.sass.dist.files = infoInstance.getSassConfig();
+            tasks.watch.js.files=[basePath + 'public/**/**.js'];
+            tasks.watch.scss.files=[basePath + 'public/**/**.scss'];
+            tasks.resources = resources;
+            tasks.basePath = basePath;
+            tasks.buildDirectory = buildDirectory;
+            fs.writeFileSync(os.tmpdir() + '/grunt.json', JSON.stringify(tasks));
+            if (this.build) {
+                grunt.tasks(['build'], {gruntfile: __dirname + '/../Gruntfile.js'});
+            }
+            if (this.watch) {
+                grunt.tasks(['watch'], {gruntfile: __dirname + '/../Gruntfile.js'});
+            }
+        }
+}
+
+var buildInstance = new Build({
+    config: configPath,
+    build: !!program.build,
+    excute: !!program.excute,
+    watch: !!program.watch
+});
+buildInstance.run();
