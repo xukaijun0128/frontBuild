@@ -126,20 +126,7 @@ Build.prototype.run = function() {
             buildDirectory = configInstance.get('path', 'build');
             buildDirectory.javascript = basePath + buildDirectory.javascript + '/';
             buildDirectory.css = basePath + buildDirectory.css + '/';
-            if (fs.existsSync(basePath + 'rbuild.lock')) {
-                rbuildLock = fs.readFileSync(basePath + 'rbuild.lock').toString();
-                if (rbuildLock) {
-                    rbuildLock = JSON.parse(rbuildLock);
-                }
 
-                _.each(rbuildLock, function(lock) {
-                    var javascript = lock.javascript;
-
-                    if (typeof javascript !== 'undefined') {
-                        removeFiles.push(basePath + javascript);
-                    }
-                });
-            }
             _.each(resources, function(resource) {
                 var dest = resource.dest,
                     javascript;
@@ -152,13 +139,6 @@ Build.prototype.run = function() {
                 });
             });
 
-            if (_.size(removeFiles) > 0) {
-                _.each(removeFiles, function(removeFile) {
-                    if (fs.existsSync(removeFile)) {
-                        fs.unlinkSync(removeFile);
-                    }
-                });
-            }
             resourceFiles = _.uniq(resourceFiles);
             _.each(resourceFiles, function(jsFile) {
                 tempResourceMap[jsFile] = buildDirectory.javascript + 'dest/' + jsFile.replace(basePath, '');
@@ -195,6 +175,27 @@ Build.prototype.run = function() {
             tasks.buildDirectory = buildDirectory;
             fs.writeFileSync(os.tmpdir() + '/grunt.json', JSON.stringify(tasks));
             if (this.build) {
+                if (fs.existsSync(basePath + 'rbuild.lock')) {
+                    rbuildLock = fs.readFileSync(basePath + 'rbuild.lock').toString();
+                    if (rbuildLock) {
+                        rbuildLock = JSON.parse(rbuildLock);
+                    }
+
+                    _.each(rbuildLock, function(lock) {
+                        var javascript = lock.javascript;
+
+                        if (typeof javascript !== 'undefined') {
+                            removeFiles.push(basePath + javascript);
+                        }
+                    });
+                }
+                if (_.size(removeFiles) > 0) {
+                    _.each(removeFiles, function(removeFile) {
+                        if (fs.existsSync(removeFile)) {
+                            fs.unlinkSync(removeFile);
+                        }
+                    });
+                }
                 grunt.tasks(['build'], {gruntfile: __dirname + '/../Gruntfile.js'});
             }
             if (this.watch) {
