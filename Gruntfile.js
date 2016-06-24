@@ -18,6 +18,7 @@ module.exports = function(grunt) {
             clean: pkg.clean,
             watch: pkg.watch
         });
+
         infoInstance = new getInfo(basePath + '.rbuildrc');
         _getFilesWithAbsolutePath = function(files) {
             return _.map(files, function(fileName) {
@@ -28,6 +29,7 @@ module.exports = function(grunt) {
 
             var hasThis = {},
                 sassConfig,
+                cwd,
                 resourceFiles = [],
                 tasks = grunt.config();
 
@@ -78,6 +80,7 @@ module.exports = function(grunt) {
                 grunt.initConfig(tasks);
                 grunt.task.run(['copy:watchTask', 'uglify:watchTask', 'concat:watchTask', 'clean']);
             } else {
+                cwd = pkg.sassDist.folders[0].cwd;
                 sassConfig = infoInstance.listSass();
                 filepath = filepath.split('/public/')[1].replace(/\.scss|\.css/, '');
                 _.each(sassConfig, function(value, key) {
@@ -85,9 +88,9 @@ module.exports = function(grunt) {
                         resourceFiles.push(
                             {
                                 "expand": true,
-                                "cwd": basePath + "rbuild/scss",
-                                "src": [key.split('rbuild/scss/')[1]],
-                                "dest": basePath + "public/build",
+                                "cwd": basePath + cwd,
+                                "src": [key.split(cwd + '/')[1]],
+                                "dest": basePath + pkg.sassDist.folders[0].dest,
                                 "ext": ".css"
                             }
                         );
@@ -103,7 +106,7 @@ module.exports = function(grunt) {
         });
         grunt.registerTask(
             'build',
-            ['copy', 'uglify', 'concat', 'sass', 'clean']
+            ['copy:main', 'uglify:task', 'concat:task', 'sass', 'clean']
         );
 
 };

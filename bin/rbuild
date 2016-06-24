@@ -116,6 +116,7 @@ Build.prototype.run = function() {
         resourceFiles = [],
         configInstance,
         basePath,
+        sassDist,
         buildDirectory,
         rbuildLock;
 
@@ -124,6 +125,7 @@ Build.prototype.run = function() {
             configInstance = new Config(config);
             configInstance.read();
             buildDirectory = configInstance.get('path', 'build');
+            sassDist = configInstance.get('sass', 'dist');
             buildDirectory.javascript = basePath + buildDirectory.javascript + '/';
             buildDirectory.css = basePath + buildDirectory.css + '/';
 
@@ -173,6 +175,7 @@ Build.prototype.run = function() {
             tasks.resources = resources;
             tasks.basePath = basePath;
             tasks.buildDirectory = buildDirectory;
+            tasks.sassDist = sassDist;
             fs.writeFileSync(os.tmpdir() + '/grunt.json', JSON.stringify(tasks));
             if (this.build) {
                 if (fs.existsSync(basePath + 'rbuild.lock')) {
