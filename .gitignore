@@ -1,3 +1,4 @@
 *.lock
 .sass-cache/
 node_modules
+tests
