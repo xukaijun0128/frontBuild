@@ -1,6 +1,6 @@
 {
   "name": "frontBuild",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "description": "add watch",
   "main": "Gruntfile.js",
   "bin": {
