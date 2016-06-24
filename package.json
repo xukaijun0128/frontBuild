@@ -4,7 +4,7 @@
   "description": "add watch",
   "main": "Gruntfile.js",
   "bin": {
-    "rbuild": "config.js"
+    "rbuild": "./bin/rbuild"
   },
   "dependencies": {
     "underscore": "1.4.x",
