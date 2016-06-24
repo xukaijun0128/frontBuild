@@ -1,0 +1,30 @@
+{
+    "path": {
+        "build": {
+            "javascript": "build/javascripts",
+            "css": "build/stylesheets"
+        },
+        "components_config": "configs/components.json",
+        "resources_config": "configs/resources",
+        "static_root": "assets"
+    },
+    "prefix": {
+        "resources_key": "controllers",
+        "resources_css": "assets/stylesheets",
+        "resources_javascript": "assets/javascripts"
+    },
+    "sass": {
+        "dist": {
+            "folders": [
+                {
+                    "expand": true,
+                    "cwd": "configs/scss",
+                    "src": ["*.scss"],
+                    "dest": "build/stylesheets",
+                    "ext": ".css"
+                }
+            ],
+            "dir": "configs/scss"       
+        }
+    }
+}
