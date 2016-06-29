@@ -13,6 +13,7 @@ var tasks, Build,
     );
 program.version(packageConfig.version)
     .option('-b, --build', '')
+    .option('-s, --sass', 'convert sass')
     .option('-e, --excute', 'excute xx file')
     .option('-w, --watch', 'watch the changes')
     .parse(process.argv);
@@ -25,6 +26,7 @@ if (!fs.existsSync(configPath)) {
 var Build = function(config) {
     this.config = config.config;
     this.build = config.build;
+    this.sass = config.sass;
     this.watch = config.watch;
     this.basePath = fs.realpathSync(config + '/../') + '/';
 }
@@ -204,12 +206,16 @@ Build.prototype.run = function() {
             if (this.watch) {
                 grunt.tasks(['watch'], {gruntfile: __dirname + '/../Gruntfile.js'});
             }
+            if (this.sass) {
+                grunt.tasks(['sass'], {gruntfile: __dirname + '/../Gruntfile.js'});
+            }
         }
 }
 
 var buildInstance = new Build({
     config: configPath,
     build: !!program.build,
+    sass: !!program.sass,
     excute: !!program.excute,
     watch: !!program.watch
 });
