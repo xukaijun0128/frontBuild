@@ -33,7 +33,7 @@ module.exports = function(grunt) {
                 resourceFiles = [],
                 tasks = grunt.config();
 
-            if (target === 'css') {
+            if (target === 'scss') {
                 cwd = pkg.sassDist.folders[0].cwd;
                 sassConfig = infoInstance.listSass();
                 filepath = filepath.split('/public/')[1].replace(/\.scss|\.css/, '');
@@ -50,7 +50,7 @@ module.exports = function(grunt) {
                         );
                     }
                 })
-                if (_.isEmpty(files)) {
+                if (_.isEmpty(resourceFiles)) {
                     return;
                 }
                 tasks.sass.dist.files = resourceFiles;
