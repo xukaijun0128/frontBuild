@@ -108,5 +108,9 @@ module.exports = function(grunt) {
             'build',
             ['copy:main', 'uglify:task', 'concat:task', 'sass', 'clean']
         );
+        grunt.registerTask(
+            'jsCompress',
+            ['copy:main', 'uglify:task', 'concat:task', 'clean']
+        );
 
 };

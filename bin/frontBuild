@@ -16,6 +16,7 @@ program.version(packageConfig.version)
     .option('-s, --sass', 'convert sass')
     .option('-e, --excute', 'excute xx file')
     .option('-w, --watch', 'watch the changes')
+    .option('-j, --jsCompress', 'compress js file')
     .parse(process.argv);
 
 if (!fs.existsSync(configPath)) {
@@ -28,6 +29,7 @@ var Build = function(config) {
     this.build = config.build;
     this.sass = config.sass;
     this.watch = config.watch;
+    this.jsCompress = config.jsCompress;
     this.basePath = fs.realpathSync(config + '/../') + '/';
 }
 
@@ -179,7 +181,7 @@ Build.prototype.run = function() {
             tasks.buildDirectory = buildDirectory;
             tasks.sassDist = sassDist;
             fs.writeFileSync(os.tmpdir() + '/grunt.json', JSON.stringify(tasks));
-            if (this.build) {
+            if (this.build || this.jsCompress) {
                 if (fs.existsSync(basePath + 'rbuild.lock')) {
                     rbuildLock = fs.readFileSync(basePath + 'rbuild.lock').toString();
                     if (rbuildLock) {
@@ -201,6 +203,8 @@ Build.prototype.run = function() {
                         }
                     });
                 }
+            }
+            if (this.build) {
                 grunt.tasks(['build'], {gruntfile: __dirname + '/../Gruntfile.js'});
             }
             if (this.watch) {
@@ -208,6 +212,9 @@ Build.prototype.run = function() {
             }
             if (this.sass) {
                 grunt.tasks(['sass'], {gruntfile: __dirname + '/../Gruntfile.js'});
+            }
+            if (this.jsCompress) {
+                grunt.tasks(['jsCompress'], {gruntfile: __dirname + '/../Gruntfile.js'});
             }
         }
 }
@@ -217,6 +224,7 @@ var buildInstance = new Build({
     build: !!program.build,
     sass: !!program.sass,
     excute: !!program.excute,
-    watch: !!program.watch
+    watch: !!program.watch,
+    jsCompress: !!program.jsCompress
 });
 buildInstance.run();
