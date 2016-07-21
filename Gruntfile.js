@@ -33,53 +33,7 @@ module.exports = function(grunt) {
                 resourceFiles = [],
                 tasks = grunt.config();
 
-            if (target === 'js') {
-                hasThis = _.filter(pkg.resources, function(value, key) {
-                    return _.size(_.filter(value.javascript, function(v) {
-                        return filepath.indexOf(v) !== -1;
-                    })) > 0;
-                });
-                if (_.isEmpty(hasThis)) {
-                    return;
-                }
-                _.each(hasThis, function(resource) {
-                    var dest = resource.dest,
-                        javascript;
-
-                    if (typeof dest.javascript !== 'undefined' && dest.javascript !== null) {
-                        javascript = basePath + dest.javascript;
-                    }
-                    _.each(_getFilesWithAbsolutePath(resource.javascript), function(jsFile) {
-                        resourceFiles.push(jsFile);
-                    });
-                });
-
-                _.each(resourceFiles, function(jsFile) {
-                    tempResourceMap[jsFile] = buildDirectory.javascript + 'dest/' + jsFile.replace(basePath, '');
-                    tasks.copy.watchTask.files.push({
-                        expand: true,
-                        src: [jsFile],
-                        dest: buildDirectory.javascript + 'dest/',
-                        filter: 'isFile'
-                    });
-                    tasks.uglify.watchTask.files[buildDirectory.javascript + 'dest/' + jsFile.replace(basePath, '')] = [jsFile];
-                });
-                _.each(hasThis, function(resource) {
-                    var dest = resource.dest, javascript;
-
-                    if (typeof dest.javascript !== 'undefined' && dest.javascript !== null) {
-                        javascript = basePath + dest.javascript;
-                        tasks.concat.watchTask.files[javascript] = _.map(
-                            _getFilesWithAbsolutePath(resource.javascript),
-                            function(js) {
-                                return tempResourceMap[js];
-                            }
-                        );
-                    }
-                });
-                grunt.initConfig(tasks);
-                grunt.task.run(['copy:watchTask', 'uglify:watchTask', 'concat:watchTask', 'clean']);
-            } else {
+            if (target === 'css') {
                 cwd = pkg.sassDist.folders[0].cwd;
                 sassConfig = infoInstance.listSass();
                 filepath = filepath.split('/public/')[1].replace(/\.scss|\.css/, '');

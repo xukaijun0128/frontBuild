@@ -88,14 +88,6 @@ Build.prototype.run = function() {
                 }
             },
             watch: {
-                js: {
-                    files: [],
-                    tasks: [],
-                    options: {
-                        spawn: false,
-                        debounceDelay: 5000,
-                  },
-                },
                 scss: {
                     files: [],
                     tasks: [],
@@ -174,7 +166,6 @@ Build.prototype.run = function() {
             //保存rbuild.lock
             infoInstance.save();
             tasks.sass.dist.files = infoInstance.getSassConfig();
-            tasks.watch.js.files=[basePath + 'public/**/**.js'];
             tasks.watch.scss.files=[basePath + 'public/**/**.scss'];
             tasks.resources = resources;
             tasks.basePath = basePath;
