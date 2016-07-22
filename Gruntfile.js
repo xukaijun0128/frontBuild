@@ -37,19 +37,30 @@ module.exports = function(grunt) {
                 cwd = pkg.sassDist.folders[0].cwd;
                 sassConfig = infoInstance.listSass();
                 filepath = filepath.split('/public/')[1].replace(/\.scss|\.css/, '');
-                _.each(sassConfig, function(value, key) {
-                    if (value.indexOf(filepath) !== -1) {
-                        resourceFiles.push(
-                            {
-                                "expand": true,
-                                "cwd": basePath + cwd,
-                                "src": [key.split(cwd + '/')[1]],
-                                "dest": basePath + pkg.sassDist.folders[0].dest,
-                                "ext": ".css"
-                            }
-                        );
-                    }
-                })
+                if (filepath.indexOf('global/scss/saas') !== -1) {
+                    resourceFiles.push({
+                        "expand": true,
+                        "cwd": basePath + "public/global/scss/theme",
+                        "src": ["*.scss"],
+                        "dest": basePath + "public/build",
+                        "ext": ".css"
+                    })
+                } else {
+                    _.each(sassConfig, function(value, key) {
+                        if (value.indexOf(filepath) !== -1) {
+                            resourceFiles.push(
+                                {
+                                    "expand": true,
+                                    "cwd": basePath + cwd,
+                                    "src": [key.split(cwd + '/')[1]],
+                                    "dest": basePath + pkg.sassDist.folders[0].dest,
+                                    "ext": ".css"
+                                }
+                            );
+                        }
+                    })
+                }
+
                 if (_.isEmpty(resourceFiles)) {
                     return;
                 }
