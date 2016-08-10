@@ -14,7 +14,7 @@ var tasks, Build,
 program.version(packageConfig.version)
     .option('-b, --build', '')
     .option('-s, --sass', 'convert sass')
-    .option('-e, --excute', 'excute xx file')
+    .option('-e, --excute [value]', 'excute xx file')
     .option('-w, --watch', 'watch the changes')
     .option('-j, --jsCompress', 'compress js file')
     .parse(process.argv);
@@ -30,6 +30,7 @@ var Build = function(config) {
     this.sass = config.sass;
     this.watch = config.watch;
     this.jsCompress = config.jsCompress;
+    this.excute = config.excute;
     this.basePath = fs.realpathSync(config + '/../') + '/';
 }
 
@@ -113,7 +114,9 @@ Build.prototype.run = function() {
         configInstance,
         basePath,
         sassDist,
+        routeData = [],
         buildDirectory,
+        sassConfig,
         rbuildLock;
 
         if (resources !== null) {
@@ -165,7 +168,25 @@ Build.prototype.run = function() {
             tasks.clean.files = [buildDirectory.javascript + 'dest'];
             //保存rbuild.lock
             infoInstance.save();
-            tasks.sass.dist.files = infoInstance.getSassConfig();
+            if (typeof program.excute === 'string') {
+                sassConfig = infoInstance.listSass();
+                _.each(sassConfig, function(value, key) {
+                    if (key.split('rbuild/scss/')[1].split('@')[0].indexOf(program.excute) !== -1) {
+                        routeData.push(
+                            {
+                                "expand": true,
+                                "cwd": basePath + sassDist.folders[0].cwd,
+                                "src": [key.split(sassDist.folders[0].cwd + '/')[1]],
+                                "dest": basePath + sassDist.folders[0].dest,
+                                "ext": ".css"
+                            }
+                        );
+                    }
+                })
+            }
+            routeData = _.isEmpty(routeData) ? infoInstance.getSassConfig() : routeData;
+
+            tasks.sass.dist.files =routeData
             tasks.watch.scss.files=[basePath + 'public/**/**.scss'];
             tasks.resources = resources;
             tasks.basePath = basePath;
@@ -201,7 +222,7 @@ Build.prototype.run = function() {
             if (this.watch) {
                 grunt.tasks(['watch'], {gruntfile: __dirname + '/../Gruntfile.js'});
             }
-            if (this.sass) {
+            if (this.sass || typeof program.excute === 'string') {
                 grunt.tasks(['sass'], {gruntfile: __dirname + '/../Gruntfile.js'});
             }
             if (this.jsCompress) {
