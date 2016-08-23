@@ -361,13 +361,12 @@ Info.prototype.reGetTask = function(resourceFiles, resources, buildDirectory, ba
 Info.prototype.save = function() {
     var resources = this.parseResources(),
         data;
-        console.log();
     if (_.size(resources) > 0) {
         data = {};
         _.each(resources, function(resource, key) {
             data[key] = resource['dest']
         });
-
+        data['timestamp'] = new Date().getTime();
         fs.writeFileSync(this.resourcesBasePath + 'rbuild.lock', JSON.stringify(data));
     }
 };
