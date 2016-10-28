@@ -41,7 +41,7 @@ module.exports = function(grunt) {
                     resourceFiles.push({
                         "expand": true,
                         "cwd": basePath + "public/global/scss/theme",
-                        "src": ["*.scss"],
+                        "src": ['saas-' + pkg.theme + ".scss"],
                         "dest": basePath + "public/build",
                         "ext": ".css"
                     })

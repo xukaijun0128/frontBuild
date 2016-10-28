@@ -15,7 +15,7 @@ program.version(packageConfig.version)
     .option('-b, --build', '')
     .option('-s, --sass', 'convert sass')
     .option('-e, --excute [value]', 'excute xx file')
-    .option('-w, --watch', 'watch the changes')
+    .option('-w, --watch [value]', 'watch the changes')
     .option('-j, --jsCompress', 'compress js file')
     .parse(process.argv);
 
@@ -192,6 +192,10 @@ Build.prototype.run = function() {
             tasks.basePath = basePath;
             tasks.buildDirectory = buildDirectory;
             tasks.sassDist = sassDist;
+            tasks.theme = 'black';
+            if (typeof program.watch === 'string' && _.indexOf(['black', 'purple', 'blue', 'grey'], program.watch) !== -1) {
+                tasks.theme = program.watch;
+            }
             fs.writeFileSync(os.tmpdir() + '/grunt.json', JSON.stringify(tasks));
             if (this.build || this.jsCompress) {
                 if (fs.existsSync(basePath + 'rbuild.lock')) {
